@@ -4,9 +4,9 @@ pragma solidity ^0.8.4;
 
 contract Testament {
   mapping(address => uint) private _balances;
-  address _owner;
-  address _doctor;
-  bool _died;
+  address private _owner;
+  address private _doctor;
+  bool private _died;
 
   event Donation(address indexed receiver, uint amount);
   event SetDoctor(address lastDoctor, address newDoctor);

@@ -48,8 +48,23 @@ describe('Testament', async function () {
     });
   });
   describe('Doctor', async function () {
-    it('Should set bob as a new doctor');
-    it('Should revert call if new doctor is owner');
-    it('Should emit events setDoctor');
+    let SETDOCTOR;
+    beforeEach(async function () {
+      SETDOCTOR = await testament.connect(owner).setDoctor(alice.address);
+    });
+    it('Should set a user as a new doctor', async function () {
+      expect(await testament.connect(owner).doctor()).to.equal(alice.address);
+    });
+    it('Should emit events SetDoctor', async function () {
+      expect(SETDOCTOR).to.emit(testament, 'SetDoctor').withArgs(doctor.address, alice.address);
+    });
+    it('Should revert call if sender is not owner', async function () {
+      await expect(testament.connect(bob).setDoctor(alice.address))
+        .to.revertedWith('Testament: reserved to testament owner');
+    });
+    it('Should revert call if new doctor is owner', async function () {
+      await expect(testament.connect(owner).setDoctor(owner.address))
+        .to.revertedWith('Testament: cannot set yourself as doctor');
+    });
   });
 });
