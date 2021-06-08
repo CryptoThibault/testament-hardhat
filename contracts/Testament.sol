@@ -10,7 +10,7 @@ contract Testament {
 
   event Donation(address indexed receiver, uint amount);
   event SetDoctor(address lastDoctor, address newDoctor);
-  event SetDied(address owner, uint timestamp);
+  event SetDied(address owner, uint bequeath);
   event Withdrew(address indexed sender, uint amount);
 
   constructor(address doctor_) {
@@ -40,7 +40,7 @@ contract Testament {
   function setDied() public returns (bool) {
     require(msg.sender == _doctor, "Testament: reserved to testament doctor");
     _died = true;
-    emit SetDied(_owner, block.timestamp);
+    emit SetDied(_owner, address(this).balance);
     return true;
   }
 

@@ -32,7 +32,7 @@ describe('Testament', async function () {
     it('Should change balances of owner and contract', async function () {
       expect(DONATE).to.changeEtherBalances([owner, testament], [-GIVE_VALUE, GIVE_VALUE]);
     });
-    it('Should change user balance inside the contract', async function () {
+    it('Should increase user balance inside the contract', async function () {
       expect(await testament.connect(alice).balance()).to.equal(GIVE_VALUE);
     });
     it('Should emit events Donation', async function () {
@@ -65,6 +65,46 @@ describe('Testament', async function () {
     it('Should revert call if new doctor is owner', async function () {
       await expect(testament.connect(owner).setDoctor(owner.address))
         .to.revertedWith('Testament: cannot set yourself as doctor');
+    });
+  });
+  describe('Died', async function () {
+    let SETDIED;
+    beforeEach(async function () {
+      await testament.connect(owner).donate(alice.address, { value: GIVE_VALUE });
+      SETDIED = await testament.connect(doctor).setDied();
+    });
+    it('Should change boolean variable to true', async function () {
+      expect(await testament.died()).to.equal(true);
+    });
+    it('Should emits event SetDied', async function () {
+      expect(SETDIED).to.emit(testament, 'SetDied').withArgs(owner.address, GIVE_VALUE);
+    });
+    it('Should revert call if the sender is not doctor', async function () {
+      await expect(testament.connect(bob).setDied())
+        .to.revertedWith('Testament: reserved to testament doctor');
+    });
+  });
+  describe('Withdraw', async function () {
+    let WITHDRAW;
+    beforeEach(async function () {
+      await testament.connect(owner).donate(alice.address, { value: GIVE_VALUE });
+      await testament.connect(doctor).setDied();
+      WITHDRAW = await testament.connect(alice).withdraw();
+    });
+    it('Should change balances of contract and user', async function () {
+      expect(WITHDRAW).to.changeEtherBalances([testament, alice], [-GIVE_VALUE, GIVE_VALUE]);
+    });
+    it('Should descrease user balance inside the contract', async function () {
+      expect(await testament.connect(alice).balance()).to.equal(0);
+    });
+    it('Should emits event Withdrew', async function () {
+      expect(WITHDRAW).to.emit(testament, 'Withdrew').withArgs(alice.address, GIVE_VALUE);
+    });
+    it('Should revert call if owner is alive', async function () {
+      testament = await TESTAMENT.connect(owner).deploy(doctor.address);
+      await testament.deployed();
+      await testament.connect(owner).donate(alice.address, { value: GIVE_VALUE });
+      await expect(testament.connect(alice).withdraw()).to.revertedWith('Testament: testament owner actually alive');
     });
   });
 });
